@@ -688,8 +688,10 @@ class FrameArtCoordinator(DataUpdateCoordinator):
         # in the Options screen, which nothing read until now.
         self._artwork_count: int | None = None
         self._artwork_count_at: float | None = None
-        # Enabled by default - thumbnails are fetched for current artwork
-        self._thumbnail_fetch_enabled = True
+        # FORK PATCH: off by default. On a 2020 Frame (QE43LS03T) a failed
+        # thumbnail fetch for uncached Art Store content is followed within
+        # ~1s by the TV's art app disconnecting and the TV leaving Art Mode.
+        self._thumbnail_fetch_enabled = False
         self._thumbnail_failures = 0
         # Temporary backoff for thumbnail fetch (re-enables automatically)
         self._thumbnail_backoff_until: float | None = None
@@ -901,6 +903,7 @@ class FrameArtCoordinator(DataUpdateCoordinator):
             )
             if (
                 content_id
+                and self._thumbnail_fetch_enabled  # FORK PATCH: honor the flag
                 and not thumbnail_in_backoff
                 and need_thumbnail
                 and not store_retry_waiting
